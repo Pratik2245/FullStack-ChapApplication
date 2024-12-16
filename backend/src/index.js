@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import { config } from "dotenv";
 config({ path: "./dotenv/.env" });
 import cors from "cors";
-import { path } from "path";
+import path from "path";
 import { app, server } from "../lib/socket.js";
 const __dirname = path.resolve();
 connectDB();
