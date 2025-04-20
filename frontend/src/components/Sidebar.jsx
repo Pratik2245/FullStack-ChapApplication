@@ -9,13 +9,24 @@ const Sidebar = () => {
     useChatStore();
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
   useEffect(() => {
     getUser();
   }, [getUser]);
 
+  // Sort users with online users at the top
+  const sortedUsers = [...users].sort((a, b) => {
+    const aIsOnline = onlineUsers.includes(a._id);
+    const bIsOnline = onlineUsers.includes(b._id);
+    if (aIsOnline && !bIsOnline) return -1;
+    if (!aIsOnline && bIsOnline) return 1;
+    return 0;
+  });
+
   const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+    ? sortedUsers.filter((user) => onlineUsers.includes(user._id))
+    : sortedUsers;
+
   if (isUserLoading) return <SideBarSkeleton />;
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -72,7 +83,11 @@ const Sidebar = () => {
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.fullName}</div>
               <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+                {onlineUsers.includes(user._id) ? (
+                  <span className="text-green-500">Online</span>
+                ) : (
+                  "Offline"
+                )}
               </div>
             </div>
           </button>

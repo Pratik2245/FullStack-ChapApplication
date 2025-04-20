@@ -1,13 +1,15 @@
 import React, { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X } from "lucide-react";
+import { Image, Send, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const MessageInput = () => {
+const MessageInput = ({ setSendingMessage }) => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const { sendMessages } = useChatStore();
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file.type.startsWith("image/")) {
@@ -20,23 +22,34 @@ const MessageInput = () => {
     };
     reader.readAsDataURL(file);
   };
+
   const removeImage = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
+    
     try {
+      setIsUploading(true);
+      // Show the sending message in the chat
+      setSendingMessage({ text: text.trim(), image: imagePreview });
       await sendMessages({ text: text.trim(), image: imagePreview });
-      //clear the form after words
+      // Clear the form and sending message
       setText("");
       setImagePreview(null);
+      setSendingMessage(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("faied to send Message=" + error);
+      setSendingMessage(null);
+    } finally {
+      setIsUploading(false);
     }
   };
+
   return (
     <div className="p-4 w-full">
       {/* code for handling the image preview for the image sending and cancleing  */}
@@ -89,9 +102,13 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={(!text.trim() && !imagePreview) || isUploading}
         >
-          <Send size={22} />
+          {isUploading ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <Send size={22} />
+          )}
         </button>
       </form>
     </div>
